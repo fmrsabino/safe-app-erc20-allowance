@@ -1,33 +1,37 @@
-import { Button, Title } from "@gnosis.pm/safe-react-components"
-import { ButtonBase, Container, TextField } from "@material-ui/core"
-import { Contract, ethers } from "ethers"
-import { useMemo, useState } from "react"
+import { Button } from "@gnosis.pm/safe-react-components"
+import { Container, TextField } from "@material-ui/core"
+import { BigNumber, ethers } from "ethers"
+import { useState } from "react"
 import ERC20Abi from "./abis/erc20.json"
-import TokenInfo from "./TokenInfo"
+import AllowanceEntry from "./AllowanceEntry"
 
 interface Props {
-    web3Provider: ethers.providers.Web3Provider
-    onAddTokenClick: (erc20: TokenInfo) => {}
+    web3Provider: ethers.providers.Web3Provider,
+    safeAddress: string,
+    onAddTokenClick: (erc20: AllowanceEntry) => {}
 }
 
-const AddErc20TokenForm: React.FC<Props> = ({ web3Provider, onAddTokenClick }) => {
+const AddAllowanceForm: React.FC<Props> = ({ web3Provider, safeAddress, onAddTokenClick: onAddEntryClick }) => {
     const [token, setToken] = useState<string>("")
+    const [spender, setSpender] = useState<string>("")
     const [isError, setError] = useState<boolean>(false)
 
-    const validateToken = async (tokenAddress: string) => {
+    const addAllowance = async () => {
         const erc20 = new ethers.Contract(token, ERC20Abi, web3Provider)
         if (!erc20) setError(true)
         const symbol = await erc20.symbol()
-        const tokenInfo: TokenInfo = { address: tokenAddress, symbol: symbol }
-        onAddTokenClick(tokenInfo)
+        const allowance: BigNumber = await erc20.allowance(safeAddress, spender)
+        const allowanceEntry: AllowanceEntry = { tokenAddress: token, symbol: symbol, spender: spender, allowance: allowance, update: false }
+        onAddEntryClick(allowanceEntry)
     }
 
     return (
         <Container>
             <TextField helperText="Token address (eg.: 0x0..)" onChange={e => setToken(e.target.value)} error={isError}></TextField>
-            <Button size="lg" color="secondary" onClick={() => validateToken(token)}>Add token</Button>
+            <TextField helperText="Token spender address (eg.: 0x0..)" onChange={e => setSpender(e.target.value)}></TextField>
+            <Button size="lg" color="secondary" onClick={() => addAllowance()}>Add</Button>
         </Container>
     )
 }
 
-export default AddErc20TokenForm
+export default AddAllowanceForm
