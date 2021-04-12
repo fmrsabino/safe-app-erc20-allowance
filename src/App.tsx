@@ -25,7 +25,6 @@ const Container = styled.form`
 
 const DAI_ADDRESS = "0x996f6e3e97c97b2eff6ad44a40187bc6a718ce4a"
 
-
 async function createAllowanceUpdateTx(web3Provider: ethers.providers.Web3Provider, tokenAddress: string, allowance: BigNumber, spender: string): Promise<ethers.PopulatedTransaction> {
   const tokenContract = new ethers.Contract(tokenAddress, ERC20Abi, web3Provider)
   const unsignedTx = await tokenContract.populateTransaction.approve(spender, allowance)
@@ -36,8 +35,8 @@ async function executeTxs(txs: ethers.PopulatedTransaction[], safeSdk: SafeAppsS
   let transactions = txs.map(tx =>
   ({
     to: tx.to!,
-    value: tx.value?.toHexString() ?? "0x",
-    data: tx.data ?? "0x"
+    value: tx.value?.toHexString() ?? "0x0",
+    data: tx.data ?? "0x0"
   }))
   const params = { safeTxGas: 500000 }
 
@@ -45,22 +44,29 @@ async function executeTxs(txs: ethers.PopulatedTransaction[], safeSdk: SafeAppsS
   return sendTx.safeTxHash
 }
 
-const columns = [
-  { field: 'symbol', headerName: 'Symbol', flex: 1 },
-  { field: 'tokenAddress', headerName: 'Token Address', flex: 1 },
-  { field: 'spender', headerName: 'Spender Address', flex: 1 },
-  { field: 'allowance', headerName: 'Allowance', flex: 1, renderCell: (params: GridCellParams) => (<TextField defaultValue={params.value}></TextField>) },
-]
-
 const App: React.FC = () => {
+  const columns = [
+    { field: 'symbol', headerName: 'Symbol', flex: 1 },
+    { field: 'tokenAddress', headerName: 'Token Address', flex: 1 },
+    { field: 'spender', headerName: 'Spender Address', flex: 1 },
+    {
+      field: 'allowance', headerName: 'Allowance', flex: 1,
+      renderCell: (params: GridCellParams) => (
+        <TextField
+          onChange={e => onAllowanceChange(params.id, e.target.value) }
+          defaultValue={params.value}>
+        </TextField>)
+    },
+  ]
+
   const { sdk, safe } = useSafeAppsSDK();
   const web3Provider = useMemo(() => new ethers.providers.Web3Provider(new SafeAppProvider(safe, sdk)), [sdk, safe]);
-  const [allowances, allowanceList] = useState<AllowanceEntry[]>([])
+  const [allowances, setAllowanceList] = useState<AllowanceEntry[]>([])
   const [selectionModel, setSelectionModel] = React.useState<GridRowId[]>([])
 
-  const onAddTokenClick = async (token: AllowanceEntry) => { allowanceList(old => [...old, token]) }
+  const onAddTokenClick = async (token: AllowanceEntry) => { setAllowanceList(old => [...old, token]) }
 
-  const onClick = async () => {
+  const onClick = useCallback(async () => {
     console.log(allowances)
     const updatedAllowances = allowances.filter(allowance => selectionModel.includes(allowance.id))
     const txs = await Promise.all(updatedAllowances.map(allowance =>
@@ -68,6 +74,14 @@ const App: React.FC = () => {
     ))
     const txHash = await executeTxs(txs, sdk)
     console.log(txHash)
+  }, [allowances, selectionModel])
+
+  const onAllowanceChange = async (id: GridRowId, value: string) => {
+    const newAllowances = allowances.slice()
+    const target = allowances.find(allowance => allowance.id == id)
+    if (!target) return
+    target.allowance = BigNumber.from(value)
+    setAllowanceList(newAllowances)
   }
 
   return (
@@ -81,7 +95,7 @@ const App: React.FC = () => {
             rows={allowances}
             columns={columns}
             checkboxSelection
-            onSelectionModelChange={(newSelection) => { setSelectionModel(newSelection.selectionModel) }}
+            onSelectionModelChange={newSelection => setSelectionModel(newSelection.selectionModel) }
             selectionModel={selectionModel} />
         </div>
       </div>
