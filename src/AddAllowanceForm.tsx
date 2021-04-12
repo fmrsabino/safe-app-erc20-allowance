@@ -21,7 +21,14 @@ const AddAllowanceForm: React.FC<Props> = ({ web3Provider, safeAddress, onAddTok
         if (!erc20) setError(true)
         const symbol = await erc20.symbol()
         const allowance: BigNumber = await erc20.allowance(safeAddress, spender)
-        const allowanceEntry: AllowanceEntry = { tokenAddress: token, symbol: symbol, spender: spender, allowance: allowance, update: false }
+        const allowanceEntry: AllowanceEntry = {
+            id: token + spender,
+            tokenAddress: token,
+            symbol: symbol,
+            spender: spender,
+            allowance: allowance,
+            update: false
+        }
         onAddEntryClick(allowanceEntry)
     }
 
