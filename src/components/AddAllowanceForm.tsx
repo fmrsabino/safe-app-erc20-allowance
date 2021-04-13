@@ -15,10 +15,21 @@ const AddAllowanceForm: React.FC<Props> = ({ web3Provider, safeAddress, onAddTok
     const [token, setToken] = useState<string>("")
     const [spender, setSpender] = useState<string>("")
     const [isError, setError] = useState<boolean>(false)
+    const [isSpenderError, setSpenderError] = useState<boolean>(false)
 
+    // Should use React callback here
     const addAllowance = async () => {
+        // Many of these states can be modelled as React states
+        const isValidTokenAddress = ethers.utils.isAddress(token)
+        setError(!isValidTokenAddress)
+        if (!isValidTokenAddress) return
+
+        const isValidSpenderAddress = ethers.utils.isAddress(spender)
+        setError(!isValidSpenderAddress)
+        if (!isValidSpenderAddress) return
+
         const erc20 = new ethers.Contract(token, ERC20Abi, web3Provider)
-        if (!erc20) setError(true)
+        if (!erc20) return
         const symbol = await erc20.symbol()
         const allowance: BigNumber = await erc20.allowance(safeAddress, spender)
         const allowanceEntry: AllowanceEntry = {
@@ -34,9 +45,9 @@ const AddAllowanceForm: React.FC<Props> = ({ web3Provider, safeAddress, onAddTok
     return (
         <Container>
             <TextField helperText="Token address (eg.: 0x0..)" onChange={e => setToken(e.target.value)} error={isError}></TextField>
-            <TextField helperText="Token spender address (eg.: 0x0..)" onChange={e => setSpender(e.target.value)}></TextField>
+            <TextField helperText="Token spender address (eg.: 0x0..)" onChange={e => setSpender(e.target.value)} error={isSpenderError}></TextField>
             <Button size="lg" color="secondary" onClick={() => addAllowance()}>Add</Button>
-        </Container>
+        </Container >
     )
 }
 
