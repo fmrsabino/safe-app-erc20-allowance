@@ -6,7 +6,6 @@ interface AllowanceEntry {
   symbol: string,
   spender: string,
   allowance: BigNumber,
-  update: boolean,
 }
 
 export default AllowanceEntry

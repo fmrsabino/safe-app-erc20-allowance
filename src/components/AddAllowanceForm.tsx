@@ -2,7 +2,7 @@ import { Button } from "@gnosis.pm/safe-react-components"
 import { Container, TextField } from "@material-ui/core"
 import { BigNumber, ethers } from "ethers"
 import { useState } from "react"
-import ERC20Abi from "./abis/erc20.json"
+import ERC20Abi from "../abis/erc20.json"
 import AllowanceEntry from "./AllowanceEntry"
 
 interface Props {
@@ -27,7 +27,6 @@ const AddAllowanceForm: React.FC<Props> = ({ web3Provider, safeAddress, onAddTok
             symbol: symbol,
             spender: spender,
             allowance: allowance,
-            update: false
         }
         onAddEntryClick(allowanceEntry)
     }

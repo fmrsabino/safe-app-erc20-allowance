@@ -9,7 +9,7 @@ import AllowanceEntry from './AllowanceEntry';
 import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk';
 import { DataGrid, GridCellParams, GridRowId } from '@material-ui/data-grid';
 import { Button, TextField } from '@material-ui/core';
-import ERC20Abi from "./abis/erc20.json"
+import ERC20Abi from "../abis/erc20.json"
 
 const Container = styled.form`
   margin-bottom: 2rem;
